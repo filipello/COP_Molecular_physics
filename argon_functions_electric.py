@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+''' Authors: Annet Konings, Lorenzo Filipello.''' 
+'''This library contains the functions to simulate 108 argon particles in a periodic box with the presence of an external electric field.'''
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +11,8 @@ from scipy.interpolate import interp1d
 
 
 def distance(positions, n,i,t): 
+    '''This function takes the position vectors of two particles at time t and returns their distance in scalar and vector form and the vector
+    according to minimal image convention'''
 
     direction = np.zeros(3)
     for l in range(3):
@@ -19,16 +22,20 @@ def distance(positions, n,i,t):
     return radial_distance, direction
 
 def LJ_pot(r):
+    '''This function takes the scalar distance of two particles and returns their Lennard-Jones potential'''
     
     LJ_potential = 4*(r**(-12) - r**(-6))
     return LJ_potential
 
 def grad_LJ_pot(r):
+    '''This function takes the scalar distance of two particles and returns the gradient of their Lennard-Jones potential'''
 
     grad_LJ_potential = 4*(6*r**(-7) - 12*r**(-13))
     return grad_LJ_potential
 
-def interaction(positions,n,t, E_field): 
+def interaction(positions,n,t, E_field):
+    '''This function evaluates the resulting forces acting on particle n at time t and includes the force of an external constant electric field along
+    the z-direction'''
 
     Force_x,Force_y,Force_z = 0,0,0
     for i in range(108):
@@ -45,6 +52,9 @@ def interaction(positions,n,t, E_field):
 
 
 def initial_conditions(temperature, density):
+    '''This function takes the initial temperature and density as initial conditions and set 108 particles on a face centered cubic (FCC) lattice with the required density,
+    then randomly choose the initial velocities according to a Gaussian distribution dependng on the temperature. Then returns a 108x6 array containing the initial positions and velocities of all particles'''
+    
     global particles_charge
     particles_charge = 1 #the particles are assigned the charge of a single electron
     
@@ -85,6 +95,8 @@ def initial_conditions(temperature, density):
     return particles
 
 def verlet_alg(timesteps,initial_particles, E_field):
+    '''This function takes the initial particles, the electri field and then integrates the equations of motion accordingly to the Verlet algorithm
+    for the desired timesteps. It return the positions and velocities of all particles for each timesteps'''
    
     x_coord = np.zeros((timesteps,108)) 
     y_coord = np.zeros((timesteps,108)) 
@@ -140,6 +152,7 @@ def verlet_alg(timesteps,initial_particles, E_field):
     return positions, velocities
 
 def kin_energy(velocity_x,velocity_y,velocity_z,t):
+    '''This function takes the array of the velocities of all particles and return the resulting kinetic energy of the system at time t'''
 
     kin_total=0
     
@@ -151,6 +164,9 @@ def kin_energy(velocity_x,velocity_y,velocity_z,t):
     
 
 def relaxation(temperature, density, E_field):
+    '''This method takes the initial temperature, density and electric field, initialize the particles and let them run for some time. After this it rescales the velocities using
+     the factor lambda in order reach thermal equilibrium in a faster time and repeat the process for the number of iterations. It then returns the positions and velocities
+     of the rescaled particles'''
     
     timesteps=10
     iterations = 10
@@ -176,6 +192,9 @@ def relaxation(temperature, density, E_field):
 
 
 def argon_simulation(timesteps, temperature, density, E_field):
+    '''This function initialize the particles and the electric field, use the relaxation method to reach equilibrium and the it lets the system run for the input timesteps. It return the positions
+    and velocities of all particles at each timestep'''
+    
     global box_size
     box_size = (108/density)**(1/3) # Box size
     
@@ -185,6 +204,8 @@ def argon_simulation(timesteps, temperature, density, E_field):
     return positions, velocities
 
 def energy(positions,velocities,t, E_field):
+    '''This method takes the arrays of positions and velocities of all particles, the electric field and returns and kinetic, potential, total energy of the system at that time.
+    It also returns the contributions to the potential energy from the Lennard-Jones potential and the electric potential.'''
     
     kinetic_en = 0
     potential_en = 0
@@ -221,6 +242,8 @@ def energy(positions,velocities,t, E_field):
     return kinetic_en, potential_en, total_en, Lennard_Jones_pot, electric_pot
 
 def energy_arrays(positions,velocities, timesteps, E_field):
+    '''This method takes the positions and velocities of the particles and returns the kinetic, potential, total energy, Lennard-Jones and electric
+    potentials of the system at each timestep'''
 
     en_tot = np.zeros(timesteps)
     en_kin = np.zeros(timesteps)
@@ -235,6 +258,8 @@ def energy_arrays(positions,velocities, timesteps, E_field):
 
 
 def pair_corelation(positions,t):
+    '''This function takes the positions of the particles at time t and evaluate the pair correlation distances up to half the box-size. It returns the list of the
+    pair  distances'''
  
     pair_distances=np.empty((0,0))
     
@@ -247,6 +272,9 @@ def pair_corelation(positions,t):
     return pair_distances
 
 def average_correlation(temperature,density, E_field):
+    '''This methos takes the initial temperature, density and electri field, initialize the system and let it run in order to evaluate a time average of
+    pair correlation distances. The process is repeated for the number of iterations to get an average of different ensembles. It returns the
+    average number of correlationsas a function of distance and prints the histogram of such quantities.'''
 
     timesteps = 100
     iterations = 5
@@ -276,7 +304,9 @@ def average_correlation(temperature,density, E_field):
     return average_corr_normalized
   
 def correlation_function(temperature,density, E_field):
-   
+    '''This method takes the initial temperature, density and electric field, run the simulation several times to get the average correlations and then calculates the correlation
+    function g, as a function of the distance. It plots the correlation function and quadratic interpolation of it. It returns the correlation function and the distances
+    where g is calculated.'''   
 
     average_pair_corr = average_correlation(temperature,density, E_field)
     
@@ -309,6 +339,8 @@ def correlation_function(temperature,density, E_field):
 
 
 def plot_energy(timesteps, temperature, density, E_field):
+    ''' This method takes the initial temperature, density and electrif field, runs the simulation for the desired timesteps and then plots the evolution of the
+    kinetic, potential, and total energies normalized by the number of particles during the simulation. It then return the arrays of the energies at each timestep.'''
     
     positions, velocities = argon_simulation(timesteps, temperature, density, E_field)
     kin_en, pot_en, tot_en, LJ_en, elec_en = energy_arrays(positions, velocities, timesteps, E_field)
@@ -336,6 +368,8 @@ def plot_energy(timesteps, temperature, density, E_field):
     return kin_en, pot_en, tot_en, LJ_en, elec_en
 
 def plot_trajectories(timesteps, temperature, density, E_field):
+    ''' This method takes the initial temperature, density and electric field, runs the simulation for the desired timesteps and then plots the trajectories of the particles in
+    a 3D plot. It returns the arrays of positions and velocities of all particles at each timestep.'''
     
     positions, velocities = argon_simulation(timesteps, temperature, density, E_field)
     fig = plt.figure()
