@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+'''Autors: Annet Konings, Lorenzo Filipello '''
 
 
 import argon_functions as fn
