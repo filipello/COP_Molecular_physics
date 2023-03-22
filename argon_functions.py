@@ -70,79 +70,79 @@ def initial_conditions(temperature, density):
                 particles[l+81,2]=box_size/6+box_size/3*k
     
     
-    v_x = np.zeros((1,108))
-    v_y = np.zeros((1,108))
-    v_z = np.zeros((1,108))
-    v_x[0] = np.random.normal(0,np.sqrt(temperature),108)
-    v_y[0] = np.random.normal(0,np.sqrt(temperature),108)
-    v_z[0] = np.random.normal(0,np.sqrt(temperature),108)
+    velocity_x = np.zeros((1,108))
+    velocity_y = np.zeros((1,108))
+    velocity_z = np.zeros((1,108))
+    velocity_x[0] = np.random.normal(0,np.sqrt(temperature),108)
+    velocity_y[0] = np.random.normal(0,np.sqrt(temperature),108)
+    velocity_z[0] = np.random.normal(0,np.sqrt(temperature),108)
         
        
-    particles[:,3:] = np.array([v_x,v_y,v_z]).reshape(108,3)
+    particles[:,3:] = np.array([velocity_x,velocity_y,velocity_z]).reshape(108,3)
     
     return particles
 
 def verlet_alg(timesteps,initial_particles):
    
-    x = np.zeros((timesteps,108)) 
-    y = np.zeros((timesteps,108)) 
-    z = np.zeros((timesteps,108)) 
+    x_coord = np.zeros((timesteps,108)) 
+    y_coord = np.zeros((timesteps,108)) 
+    z_coord = np.zeros((timesteps,108)) 
     
-    v_x = np.zeros((timesteps,108)) 
-    v_y = np.zeros((timesteps,108)) 
-    v_z = np.zeros((timesteps,108)) 
+    velocity_x = np.zeros((timesteps,108)) 
+    velocity_y = np.zeros((timesteps,108)) 
+    velocity_z = np.zeros((timesteps,108)) 
     
-    F_x=np.zeros((timesteps,108))
-    F_y=np.zeros((timesteps,108))
-    F_z=np.zeros((timesteps,108))
+    Force_x=np.zeros((timesteps,108))
+    Force_y=np.zeros((timesteps,108))
+    Force_z=np.zeros((timesteps,108))
     
     positions= np.zeros((3,timesteps,108))
     
-    x[0,:]=initial_particles[:,0]
-    y[0,:]=initial_particles[:,1]
-    z[0,:]=initial_particles[:,2]
-    v_x[0,:]=initial_particles[:,3]
-    v_y[0,:]=initial_particles[:,4]
-    v_z[0,:]=initial_particles[:,5]
+    x_coord[0,:]=initial_particles[:,0]
+    y_coord[0,:]=initial_particles[:,1]
+    z_coord[0,:]=initial_particles[:,2]
+    velocity_x[0,:]=initial_particles[:,3]
+    velocity_y[0,:]=initial_particles[:,4]
+    velocity_z[0,:]=initial_particles[:,5]
     
-    positions[0,:,:] = x
-    positions[1,:,:] = y
-    positions[2,:,:] = z
+    positions[0,:,:] = x_coord
+    positions[1,:,:] = y_coord
+    positions[2,:,:] = z_coord
     
     h = 0.001
 
     for i in range(108):
-        F_x[0,i],F_y[0,i],F_z[0,i] = interaction(positions,i,0)
+        Force_x[0,i],Force_y[0,i],Force_z[0,i] = interaction(positions,i,0)
     
     for t in range(0,timesteps-1): 
         for i in range(108):
-            x[t+1,i] = (x[t,i] + v_x[t,i]*h + F_x[t,i]/2*h**2) % box_size
-            positions[0,t+1,i] = x[t+1,i]
+            x_coord[t+1,i] = (x_coord[t,i] + velocity_x[t,i]*h + Force_x[t,i]/2*h**2) % box_size
+            positions[0,t+1,i] = x_coord[t+1,i]
             
-            y[t+1,i] = (y[t,i] + v_y[t,i]*h + F_y[t,i]/2*h**2) % box_size
-            positions[1,t+1,i] = y[t+1,i]
+            y_coord[t+1,i] = (y_coord[t,i] + velocity_y[t,i]*h + Force_y[t,i]/2*h**2) % box_size
+            positions[1,t+1,i] = y_coord[t+1,i]
             
-            z[t+1,i] = (z[t,i] + v_z[t,i]*h + F_z[t,i]/2*h**2) % box_size
-            positions[2,t+1,i] = z[t+1,i]
+            z_coord[t+1,i] = (z_coord[t,i] + velocity_z[t,i]*h + Force_z[t,i]/2*h**2) % box_size
+            positions[2,t+1,i] = z_coord[t+1,i]
                       
         for i in range(108):
-            F_x[t+1,i],F_y[t+1,i],F_z[t+1,i] = interaction(positions,i,t+1)
+            Force_x[t+1,i],Force_y[t+1,i],Force_z[t+1,i] = interaction(positions,i,t+1)
         
         for i in range(108):
-            v_x[t+1,i] = (F_x[t,i]+F_x[t+1,i])*h/2 + v_x[t,i]
-            v_y[t+1,i] = (F_y[t,i]+F_y[t+1,i])*h/2 + v_y[t,i]
-            v_z[t+1,i] = (F_z[t,i]+F_z[t+1,i])*h/2 + v_z[t,i]
+            velocity_x[t+1,i] = (Force_x[t,i]+Force_x[t+1,i])*h/2 + velocity_x[t,i]
+            velocity_y[t+1,i] = (Force_y[t,i]+Force_y[t+1,i])*h/2 + velocity_y[t,i]
+            velocity_z[t+1,i] = (Force_z[t,i]+Force_z[t+1,i])*h/2 + velocity_z[t,i]
 
-    velocities = np.array([v_x, v_y, v_z])
+    velocities = np.array([velocity_x, velocity_y, velocity_z])
 
     return positions, velocities
 
-def kin_energy(v_x,v_y,v_z,t):
+def kin_energy(velocity_x,velocity_y,velocity_z,t):
 
     kin_total=0
     
     for i in range(108):
-        En_kin = 0.5 * (v_x[t-1,i]**2+v_y[t-1,i]**2+v_z[t-1,i]**2)
+        En_kin = 0.5 * (velocity_x[t-1,i]**2+velocity_y[t-1,i]**2+velocity_z[t-1,i]**2)
         kin_total += En_kin
         
     return kin_total
