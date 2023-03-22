@@ -241,7 +241,6 @@ def average_correlation(temperature,density):
             pair_dist_list = pair_corelation(positions,t)
             histogram,bins = np.histogram(pair_dist_list, bins=bin_number)
             avg_correlation += histogram
-        print(i)
     average_corr_normalized = avg_correlation/(iterations*len(range(timesteps-10,timesteps-1,1)))
 
     
